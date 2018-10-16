@@ -332,14 +332,24 @@ public class ConfigManager {
     		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
     		String line;
     		
-            while ((line = reader.readLine()) != null) { 
+            while ((line = reader.readLine()) != null) {
+            	Boolean transparentOverride = null;
+            	if (line.contains(":")) {
+            		String override = line.substring(line.indexOf(":")+1);
+            		try {
+            			transparentOverride = Boolean.valueOf(override);
+            		} catch (Exception e) {
+            			transparentOverride = null;
+            		}
+            	}
             	Material blockId = Material.getMaterial(line);
             	if (blockId == null) {
             		logger.info(Globals.LogPrefix + " could not identify " + line);
             	} else {
             		// TODO: What to replace isTransparent with? Apparently not well supported.
-	            	boolean isTransparent = blockId.isTransparent();
+	            	boolean isTransparent = transparentOverride != null ? transparentOverride : blockId.isTransparent();
 	            	transparentBlocks[blockId.ordinal()] = isTransparent;
+	            	logger.info(Globals.LogPrefix + " marked " + blockId.name() + " as " + (isTransparent ? "" : "not ") + "transparent");
             	}
             }
     	} catch (IOException e) {

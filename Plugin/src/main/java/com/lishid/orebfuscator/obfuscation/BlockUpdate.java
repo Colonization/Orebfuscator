@@ -116,7 +116,7 @@ public class BlockUpdate {
     }
 
     private static void sendUpdates(World world, Set<IBlockInfo> blocks) {
-        //Orebfuscator.log("Notify block change for " + blocks.size() + " blocks");/*debug*/
+        Orebfuscator.log("Notify block change for " + blocks.size() + " blocks");/*debug*/
 
         for (IBlockInfo blockInfo : blocks) {
             Orebfuscator.nms.notifyBlockChange(world, blockInfo);
@@ -132,7 +132,7 @@ public class BlockUpdate {
             ObfuscatedCachedChunk cache = new ObfuscatedCachedChunk(cacheFolder, chunk.x, chunk.z);
             cache.invalidate();
             
-            //Orebfuscator.log("Chunk x = " + chunk.x + ", z = " + chunk.z + " is invalidated");/*debug*/
+            Orebfuscator.log("Chunk x = " + chunk.x + ", z = " + chunk.z + " is invalidated");/*debug*/
         }
     }
 
@@ -151,6 +151,8 @@ public class BlockUpdate {
 
         if ((worldConfig.isObfuscated(blockState.type) || worldConfig.isDarknessObfuscated(blockState.type))) {
             allBlocks.add(blockInfo);
+        } else {
+        	Orebfuscator.log("Block  " + blockState.type + " not orebfuscated");/*debug*/
         }
 
         if (countdown > 0) {

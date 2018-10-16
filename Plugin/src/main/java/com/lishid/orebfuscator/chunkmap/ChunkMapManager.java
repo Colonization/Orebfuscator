@@ -8,8 +8,6 @@ package com.lishid.orebfuscator.chunkmap;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.bukkit.Material;
-
 import com.lishid.orebfuscator.Orebfuscator;
 import com.lishid.orebfuscator.types.BlockState;
 

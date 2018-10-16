@@ -194,6 +194,7 @@ public class WorldReader {
 	    Material mode1Block = this.materialReader.getMaterialIdByPath(worldPath + ".Mode1Block", cfg.getMode1BlockId(), withSave);
 		Material[] randomBlocks = this.materialReader.getMaterialIdsByPath(worldPath + ".RandomBlocks", cfg.getRandomBlocks(), withSave);
 		boolean[] obfuscateBlocks = readBlockMatrix(cfg.getObfuscateBlocks(), cfg.getObfuscateBlockIds(), worldPath + ".ObfuscateBlocks", withSave);
+		Boolean shufflePerChunk = getBoolean(worldPath + ".ShufflePerChunk", cfg.shouldShufflePerChunk(), withSave);
 		
 		// For 1.13 -- don't freak out, ordinals are only used transiently, never saved.
 		switch(worldType) {
@@ -221,6 +222,7 @@ public class WorldReader {
 	    cfg.setMode1BlockId(mode1Block);
 		cfg.setRandomBlocks(randomBlocks);
 		cfg.setObfuscateBlocks(obfuscateBlocks);
+		cfg.setShufflePerChunk(shufflePerChunk);
 		
 	    return cfg;
 	}

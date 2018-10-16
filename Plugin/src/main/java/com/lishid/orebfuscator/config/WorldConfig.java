@@ -18,7 +18,8 @@ public class WorldConfig {
     private Boolean darknessHideBlocks;
     private Boolean antiTexturePackAndFreecam;
     private Boolean bypassObfuscationForSignsWithText;
-    private Integer airGeneratorMaxChance;    
+    private Boolean shufflePerChunk;
+    private Integer airGeneratorMaxChance;
     private boolean[] obfuscateBlocks;
     private boolean[] obfuscateAndProximityBlocks;
     private boolean[] darknessBlocks;
@@ -46,6 +47,7 @@ public class WorldConfig {
     
     public void setDefaults() {
 		this.enabled = true;
+		this.shufflePerChunk = true;
 		this.darknessHideBlocks = false;
 		this.antiTexturePackAndFreecam = true;
 		this.bypassObfuscationForSignsWithText = false;
@@ -74,6 +76,10 @@ public class WorldConfig {
 	    	if(this.enabled == null) {
 	    		this.enabled = baseWorld.enabled;
 	    	}
+
+	    	if (this.shufflePerChunk == null) {
+	    		this.shufflePerChunk = baseWorld.shufflePerChunk;
+			}
 	        
 	    	if(this.darknessHideBlocks == null) {
 	    		this.darknessHideBlocks = baseWorld.darknessHideBlocks;
@@ -136,6 +142,14 @@ public class WorldConfig {
     public void setEnabled(Boolean value) {
     	this.enabled = value;
     }
+
+    public Boolean shouldShufflePerChunk() {
+    	return this.shufflePerChunk;
+	}
+
+	public void setShufflePerChunk(Boolean value) {
+    	this.shufflePerChunk = value;
+	}
     
     public Boolean isDarknessHideBlocks() {
     	return this.darknessHideBlocks;
@@ -253,8 +267,8 @@ public class WorldConfig {
 		// By performing fisher-yates directly we save the Copying back and forth.
 		if (this.randomBlocks.length != 0) {
 			synchronized (this.randomBlocks) {
-				for (int idx = 1; idx < this.randomBlocks.length; ++idx) {
-					int rand = random.nextInt(idx);
+				for (int idx = this.randomBlocks.length - 1; idx > 0; idx--) {
+					int rand = random.nextInt(idx+1);
 					Material save = this.randomBlocks[idx];
 					this.randomBlocks[idx] = this.randomBlocks[rand];
 					this.randomBlocks[rand] = save;
@@ -263,8 +277,8 @@ public class WorldConfig {
 		}
 		if (this.randomBlocks2.length != 0) {
 			synchronized (this.randomBlocks2) {
-				for (int idx = 1; idx < this.randomBlocks2.length; ++idx) {
-					int rand = random.nextInt(idx);
+				for (int idx = this.randomBlocks2.length - 1; idx > 0; idx--) {
+					int rand = random.nextInt(idx+1);
 					Material save = this.randomBlocks2[idx];
 					this.randomBlocks2[idx] = this.randomBlocks2[rand];
 					this.randomBlocks2[rand] = save;

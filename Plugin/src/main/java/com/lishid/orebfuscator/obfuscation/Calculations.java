@@ -49,7 +49,7 @@ public class Calculations {
         ObfuscatedCachedChunk cache = tryUseCache(chunkData, player);
         
         if(cache != null && cache.data != null) {
-        	//Orebfuscator.log("Read from cache");/*debug*/
+        	Orebfuscator.log("Read from cache");/*debug*/
         	output = cache.data;
         } else {
 	        // Blocks kept track for ProximityHider
@@ -75,14 +75,14 @@ public class Calculations {
 		            
 		            cache.write(cache.hash, output, proximityList);
 		            
-		            //Orebfuscator.log("Write to cache");/*debug*/
+		            Orebfuscator.log("Write to cache");/*debug*/
 	        	}
 	        	
 	            cache.free();
 	        }
         }
         
-        //Orebfuscator.log("Send chunk x = " + chunkData.chunkX + ", z = " + chunkData.chunkZ + " to player " + player.getName());/*debug*/
+        Orebfuscator.log("Send chunk x = " + chunkData.chunkX + ", z = " + chunkData.chunkZ + " to player " + player.getName());/*debug*/
 
         return output;
     }
@@ -93,7 +93,7 @@ public class Calculations {
     	int initialRadius = Orebfuscator.config.getInitialRadius();
 
         // Track of pseudo-randomly assigned randomBlock
-        int randomIncrement = 0;
+        int randomIdx = 0;
         int randomIncrement2 = 0;
         int randomCave = 0;
 
@@ -111,9 +111,16 @@ public class Calculations {
 
         ChunkMapManager manager = new ChunkMapManager(chunkData);
         manager.init();
-		
+
+        if (!worldConfig.shouldShufflePerChunk()) {
+        	// If we shouldn't shuffle per chunk, just shuffle at the beginning.
+			worldConfig.shuffleRandomBlocks();
+		}
+
         for(int i = 0; i < manager.getSectionCount(); i++) {
-            worldConfig.shuffleRandomBlocks();
+        	if (worldConfig.shouldShufflePerChunk()) {
+				worldConfig.shuffleRandomBlocks();
+			}
 
             for(int offsetY = 0; offsetY < 16; offsetY++) {
             	for(int offsetZ = 0; offsetZ < 16; offsetZ++) {
@@ -128,11 +135,11 @@ public class Calculations {
 							int x = startX | offsetX;
 							int y = manager.getY();
 							int z = startZ | offsetZ;
-	
+
 	                        // Initialize data
 	                        boolean obfuscate = false;
 	                        boolean specialObfuscate = false;
-	
+
 	                        // Check if the block should be obfuscated for the default engine modes
 	                        if (worldConfig.isObfuscated(blockState.type)) {
 	                            if (initialRadius == 0) {
@@ -178,11 +185,11 @@ public class Calculations {
 	                                } else if (engineMode == 2) {
 	                                    // Ending mode 2, replace with random block
 	                                    if (randomBlocksLength > 1) {
-	                                        randomIncrement = CalculationsUtil.increment(randomIncrement, randomBlocksLength);
+                                            randomIdx = CalculationsUtil.increment(randomIdx, randomBlocksLength);
 	                                    }
-	                                    
-	                                    Orebfuscator.nms.setBlockStateFromMaterial(
-	                                    			worldConfig.getRandomBlock(randomIncrement, randomAlternate), blockState);
+
+	                                    Orebfuscator.nms.setBlockStateFromMaterial(worldConfig
+                                            .getRandomBlock(randomIdx, randomAlternate), blockState);
 	                                    randomAlternate = !randomAlternate;
 	                                }
 	                                // Anti texturepack and freecam
@@ -195,14 +202,7 @@ public class Calculations {
 	                                    }
 	
 	                                    if (randomCave > 0) {
-	                                    	if (y > player.getWorld().getMaxHeight() || y < 0) {
-												Orebfuscator.nms.setBlockStateFromMaterial(Material.VOID_AIR, blockState);
-											} else if (Orebfuscator.nms.getBlockSkyLightLevel(player.getWorld(), x, y, z) == 0) {
-	                                    		Orebfuscator.nms.setBlockStateFromMaterial(Material.CAVE_AIR, blockState);
-											} else {
-												Orebfuscator.nms.setBlockStateFromMaterial(Material.AIR, blockState);
-											}
-
+                                            setCorrectAirState(player, x, y, z, blockState);
 	                                        randomCave--;
 	                                    }
 	                                }
@@ -213,13 +213,7 @@ public class Calculations {
 	                        if (!obfuscate && worldConfig.isDarknessHideBlocks() && worldConfig.isDarknessObfuscated(blockState.type)) {
 	                            if (!areAjacentBlocksBright(player.getWorld(), x, y, z, 1)) {
 	                                // Hide block, setting it to air
-									if (y > player.getWorld().getMaxHeight() || y < 0) {
-										Orebfuscator.nms.setBlockStateFromMaterial(Material.VOID_AIR, blockState);
-									} else if (Orebfuscator.nms.getBlockSkyLightLevel(player.getWorld(), x, y, z) == 0) {
-										Orebfuscator.nms.setBlockStateFromMaterial(Material.CAVE_AIR, blockState);
-									} else {
-										Orebfuscator.nms.setBlockStateFromMaterial(Material.AIR, blockState);
-									}
+									setCorrectAirState(player, x, y, z, blockState);
 	                            }
 	                        }
 	                        
@@ -248,9 +242,19 @@ public class Calculations {
 
         ProximityHider.addProximityBlocks(player, chunkData.chunkX, chunkData.chunkZ, proximityBlocks);
         
-        //Orebfuscator.log("Create new chunk data for x = " + chunkData.chunkX + ", z = " + chunkData.chunkZ);/*debug*/
+        Orebfuscator.log("Create new chunk data for x = " + chunkData.chunkX + ", z = " + chunkData.chunkZ);/*debug*/
         
         return output;
+    }
+
+    private static void setCorrectAirState(Player player, int x, int y, int z, BlockState blockState) {
+        if (y > player.getWorld().getMaxHeight() || y < 0) {
+            Orebfuscator.nms.setBlockStateFromMaterial(Material.VOID_AIR, blockState);
+        } else if (Orebfuscator.nms.getBlockSkyLightLevel(player.getWorld(), x, y, z) == 0) {
+            Orebfuscator.nms.setBlockStateFromMaterial(Material.CAVE_AIR, blockState);
+        } else {
+            Orebfuscator.nms.setBlockStateFromMaterial(Material.AIR, blockState);
+        }
     }
     
     private static boolean canObfuscate(ChunkData chunkData, int x, int y, int z, BlockState blockState) {
